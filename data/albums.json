@@ -1,0 +1,26 @@
+[
+  {
+    "title": "Художественная съёмка",
+    "photos": [
+      "img/albums/art-01.jpg",
+      "img/albums/art-02.jpg",
+      "img/albums/art-03.jpg"
+    ]
+  },
+  {
+    "title": "Портреты",
+    "photos": [
+      "img/albums/portrait-01.jpg",
+      "img/albums/portrait-02.jpg"
+    ]
+  },
+  {
+    "title": "Репортаж",
+    "photos": [
+      "img/albums/report-01.jpg",
+      "img/albums/report-02.jpg",
+      "img/albums/report-03.jpg",
+      "img/albums/report-04.jpg"
+    ]
+  }
+]

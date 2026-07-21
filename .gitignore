@@ -1,0 +1,9 @@
+# База заявок — в репозиторий не попадает
+*.sqlite
+*.sqlite3
+leads.sqlite
+
+# Служебное
+.DS_Store
+Thumbs.db
+*.log
