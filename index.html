@@ -180,6 +180,56 @@ section{padding:clamp(64px,10vw,150px) 0}
 .album-foot h3{margin:0;font-size:clamp(11px,1.15vw,13px);font-weight:400;letter-spacing:.26em;text-transform:uppercase}
 .album-foot .count{font-size:10px;letter-spacing:.22em;color:var(--dim);flex-shrink:0}
 
+/* ---- Раздел с вложенными альбомами ---- */
+.crumb{
+  display:block;text-align:center;text-decoration:none;
+  font-size:11px;letter-spacing:.28em;text-transform:uppercase;text-indent:.28em;
+  color:var(--muted);transition:color .3s;margin-bottom:clamp(18px,3vw,34px);
+}
+.crumb:hover{color:var(--gold)}
+.crumb::before{content:"\2190\00a0\00a0"}
+
+.group-title{
+  text-align:center;margin:0 0 clamp(38px,6vw,84px);
+  font-family:var(--serif);font-style:italic;font-weight:400;
+  font-size:clamp(24px,5.2vw,62px);letter-spacing:.09em;text-indent:.09em;
+  text-transform:uppercase;line-height:1.1;
+}
+
+.sets{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(min(100%,240px),1fr));
+  gap:clamp(22px,3vw,44px);
+}
+.set{text-decoration:none;display:block}
+.set-shot{
+  position:relative;aspect-ratio:3/4;overflow:hidden;background:var(--panel);
+  border:1px solid transparent;transition:border-color .5s;
+}
+.set:hover .set-shot{border-color:var(--gline)}
+.set-shot img{
+  width:100%;height:100%;object-fit:cover;display:block;
+  transition:transform 1.2s cubic-bezier(.16,1,.3,1),filter .6s;
+}
+.set:hover .set-shot img{transform:scale(1.04);filter:brightness(.75)}
+.set-shot .ph{position:absolute;inset:0;background:linear-gradient(140deg,#1a1a1a,#050505 70%);display:grid;place-items:center}
+.set-shot .ph span{font-size:10px;letter-spacing:.3em;color:var(--dim);text-transform:uppercase}
+.set-btn{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) scale(.96);
+  padding:11px 24px;background:rgba(245,245,245,.86);color:#0a0a0a;
+  font-size:9px;letter-spacing:.26em;text-transform:uppercase;white-space:nowrap;
+  opacity:0;transition:opacity .4s,transform .4s;pointer-events:none;
+}
+.set:hover .set-btn,.set:focus-visible .set-btn{opacity:1;transform:translate(-50%,-50%) scale(1)}
+.set-cap{
+  padding-top:16px;text-align:center;
+  font-size:10px;letter-spacing:.26em;text-transform:uppercase;text-indent:.26em;
+  color:var(--muted);transition:color .3s;
+}
+.set:hover .set-cap{color:var(--text)}
+.set-cap b{display:block;font-weight:400;color:inherit}
+.set-cap i{display:block;font-style:normal;font-size:9px;color:var(--dim);margin-top:6px;letter-spacing:.2em}
+
 /* ============================================================
    УСЛУГИ
    ============================================================ */
@@ -511,26 +561,108 @@ const mediaHTML = (src, alt) =>
       : `<span class="ph"><span>Фото</span></span>`;
 
 function renderAlbums(){
+  const path = currentPath();
+  const node = nodeAt(path);
+
+  // Корень — список альбомов во всю ширину
+  if (!node) { renderRoot(); return; }
+
+  // Раздел с вложенными альбомами
+  if (node.children) { renderGroup(node, path); return; }
+
+  // Путь привёл к обычному альбому — показываем корень и открываем просмотр
+  renderRoot();
+  openLb(node);
+}
+
+function renderRoot(){
   listEl.innerHTML = '';
-  ALBUMS.forEach((album, ai) => {
+  ALBUMS.forEach((album, i) => {
     const card = document.createElement('article');
     card.className = 'album rise';
     card.innerHTML = `
-      <button class="album-media" data-album="${ai}" aria-label="Открыть альбом «${esc(album.title)}»">
-        ${mediaHTML(album.photos[0], album.title)}
-        <span class="album-btn">В альбом</span>
+      <button class="album-media" data-go="${i}" aria-label="Открыть «${esc(album.title)}»">
+        ${mediaHTML(coverOf(album), album.title)}
+        <span class="album-btn">${album.children ? 'Смотреть' : 'В альбом'}</span>
       </button>
       <div class="album-foot">
         <h3>${esc(album.title)}</h3>
-        <span class="count">${album.photos.length} кадров</span>
+        <span class="count">${countLabel(album)}</span>
       </div>`;
     listEl.appendChild(card);
   });
-  // подключаем анимацию появления к новым карточкам
   card_observe();
 }
 
-renderAlbums();
+function renderGroup(node, path){
+  const parentPath = path.slice(0, -1);
+  const parent = nodeAt(parentPath);
+  const backTo = parent ? parent.title : 'Альбомы';
+
+  listEl.innerHTML = `
+    <a class="crumb" href="#" data-back="${parentPath.join('-')}">В ${esc(backTo.toLowerCase())}</a>
+    <h3 class="group-title">${esc(node.title)}</h3>
+    <div class="sets"></div>`;
+
+  const grid = listEl.querySelector('.sets');
+  node.children.forEach((child, i) => {
+    const a = document.createElement('a');
+    a.className = 'set rise';
+    a.href = '#set-' + path.concat(i).join('-');
+    a.innerHTML = `
+      <div class="set-shot">
+        ${mediaHTML(coverOf(child), child.title)}
+        <span class="set-btn">${child.children ? 'Смотреть' : 'В альбом'}</span>
+      </div>
+      <div class="set-cap">
+        <b>${esc(child.title)}</b>
+        <i>${countLabel(child)}</i>
+      </div>`;
+    grid.appendChild(a);
+  });
+
+  card_observe();
+}
+
+/* ---- вспомогательное ---- */
+function coverOf(node){
+  return node.cover || (node.photos && node.photos[0]) || '';
+}
+function countLabel(node){
+  if (node.children) {
+    const n = node.children.length;
+    return n + ' ' + plural(n, 'альбом', 'альбома', 'альбомов');
+  }
+  const n = node.photos ? node.photos.length : 0;
+  return n + ' ' + plural(n, 'кадр', 'кадра', 'кадров');
+}
+function plural(n, one, few, many){
+  const a = Math.abs(n) % 100, b = a % 10;
+  if (a > 10 && a < 20) return many;
+  if (b > 1 && b < 5) return few;
+  if (b === 1) return one;
+  return many;
+}
+function nodeAt(path){
+  let node = null, list = ALBUMS;
+  for (const i of path) {
+    if (!list || !list[i]) return null;
+    node = list[i];
+    list = node.children;
+  }
+  return node;
+}
+function currentPath(){
+  const m = location.hash.match(/^#set-([\d-]+)$/);
+  return m ? m[1].split('-').filter(s => s !== '').map(Number) : [];
+}
+function goTo(path){
+  const target = path.length ? '#set-' + path.join('-') : '#albums';
+  if (location.hash === target) renderAlbums();
+  else location.hash = target;
+}
+
+/* ================= ЗАГРУЗКА ДАННЫХ ================= */
 
 // Забираем альбомы: из собранного JSON или из панели управления
 if (!DEMO) {
@@ -572,20 +704,21 @@ const lbStage = document.getElementById('lbStage');
 const lbTitle = document.getElementById('lbTitle');
 const lbCount = document.getElementById('lbCount');
 const lbCaption = document.getElementById('lbCaption');
-let curAlbum = 0, curIndex = 0, lastFocus = null;
+let curNode = null, curIndex = 0, lastFocus = null;
 
 function paint(){
-  const album = ALBUMS[curAlbum];
   const old = lbStage.querySelector('img, .ph');
   if (old) old.remove();
-  lbStage.insertAdjacentHTML('afterbegin', mediaHTML(album.photos[curIndex], album.title));
-  lbTitle.textContent = album.title;
-  lbCaption.textContent = album.title;
-  lbCount.textContent = String(curIndex + 1).padStart(2,'0') + ' / ' + String(album.photos.length).padStart(2,'0');
+  lbStage.insertAdjacentHTML('afterbegin', mediaHTML(curNode.photos[curIndex], curNode.title));
+  lbTitle.textContent = curNode.title;
+  lbCaption.textContent = curNode.title;
+  lbCount.textContent = String(curIndex + 1).padStart(2,'0') + ' / '
+                      + String(curNode.photos.length).padStart(2,'0');
 }
-function openLb(ai){
+function openLb(node){
+  if (!node || !node.photos || !node.photos.length) return;
   lastFocus = document.activeElement;
-  curAlbum = ai; curIndex = 0; paint();
+  curNode = node; curIndex = 0; paint();
   lb.classList.add('open');
   document.body.classList.add('locked');
   document.getElementById('lbClose').focus();
@@ -596,13 +729,40 @@ function closeLb(){
   if (lastFocus) lastFocus.focus();
 }
 function step(dir){
-  const n = ALBUMS[curAlbum].photos.length;
+  const n = curNode.photos.length;
   curIndex = (curIndex + dir + n) % n;
   paint();
 }
+
 listEl.addEventListener('click', e => {
-  const btn = e.target.closest('[data-album]');
-  if (btn) openLb(Number(btn.dataset.album));
+  // Возврат на уровень выше
+  const back = e.target.closest('[data-back]');
+  if (back) {
+    e.preventDefault();
+    const raw = back.dataset.back;
+    goTo(raw === '' ? [] : raw.split('-').map(Number));
+    return;
+  }
+
+  // Карточка в корневом списке
+  const root = e.target.closest('[data-go]');
+  if (root) {
+    const i = Number(root.dataset.go);
+    const node = ALBUMS[i];
+    if (node && node.children) goTo([i]);
+    else openLb(node);
+    return;
+  }
+
+  // Карточка внутри раздела
+  const set = e.target.closest('.set');
+  if (set) {
+    e.preventDefault();
+    const path = set.getAttribute('href').replace('#set-', '').split('-').map(Number);
+    const node = nodeAt(path);
+    if (node && node.children) goTo(path);
+    else openLb(node);
+  }
 });
 document.getElementById('lbClose').addEventListener('click', closeLb);
 document.getElementById('lbPrev').addEventListener('click', () => step(-1));
@@ -622,6 +782,18 @@ lbStage.addEventListener('touchend', e => {
   if (Math.abs(dx) > 50) step(dx < 0 ? 1 : -1);
   touchX = null;
 }, {passive:true});
+
+/* ---- запуск и переходы по адресу ---- */
+renderAlbums();
+
+addEventListener('hashchange', () => {
+  if (lb.classList.contains('open')) closeLb();
+  renderAlbums();
+  if (location.hash.startsWith('#set-')) {
+    const sec = document.getElementById('albums');
+    if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+});
 
 /* ================= ФОРМА ЗАЯВКИ ================= */
 const leadForm = document.getElementById('leadForm');

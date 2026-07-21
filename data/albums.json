@@ -1,4 +1,22 @@
 {
-  "albums": [],
+  "albums": [
+    {
+      "title": "Художественная съёмка",
+      "cover": "img/albums/01-art/cover.jpg",
+      "children": [
+        {
+          "title": "Танец",
+          "cover": "img/albums/01-art/01-dance/01.jpg",
+          "photos": [
+            "img/albums/01-art/01-dance/01.jpg",
+            "img/albums/01-art/01-dance/02.jpg",
+            "img/albums/01-art/01-dance/03.jpg",
+            "img/albums/01-art/01-dance/04.jpg",
+            "img/albums/01-art/01-dance/05.jpg"
+          ]
+        }
+      ]
+    }
+  ],
   "images": {}
 }
