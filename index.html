@@ -327,23 +327,112 @@ footer{padding:30px 0 clamp(40px,6vh,60px);border-top:1px solid var(--line)}
 
 /* ============================================================
    ЛАЙТБОКС
+   Раскладка колонкой: шапка / кадр / счётчик / миниатюры.
+   Кадр занимает всё оставшееся место и вписывается в него целиком.
    ============================================================ */
-.lb{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.97);display:flex;flex-direction:column;opacity:0;visibility:hidden;transition:opacity .45s,visibility .45s}
+.lb{
+  position:fixed;inset:0;z-index:200;
+  display:flex;flex-direction:column;
+  background:#050505;
+  opacity:0;visibility:hidden;transition:opacity .4s,visibility .4s;
+}
 .lb.open{opacity:1;visibility:visible}
-.lb-head{display:flex;justify-content:space-between;align-items:center;gap:20px;padding:20px var(--gut)}
-.lb-head h4{margin:0;font-size:10px;font-weight:400;letter-spacing:.28em;text-transform:uppercase;color:var(--gold)}
-.lb-stage{flex:1;position:relative;min-height:0;display:grid;place-items:center;padding:0 clamp(12px,6vw,90px)}
-.lb-stage img{max-width:100%;max-height:100%;object-fit:contain;display:block}
-.lb-stage .ph{width:min(100%,1100px);aspect-ratio:3/2;background:linear-gradient(140deg,#1a1a1a,#050505 70%);display:grid;place-items:center}
-.lb-stage .ph span{font-size:10px;letter-spacing:.3em;color:var(--dim)}
-.lb-nav{position:absolute;top:50%;transform:translateY(-50%);width:52px;height:52px;display:grid;place-items:center;background:none;border:1px solid var(--line);border-radius:50%;color:var(--text);cursor:pointer;font-size:14px;transition:border-color .3s,color .3s}
-.lb-nav:hover{border-color:var(--gline);color:var(--gold)}
-.lb-prev{left:clamp(8px,2vw,30px)}
-.lb-next{right:clamp(8px,2vw,30px)}
-.lb-close{background:none;border:0;color:var(--muted);font-size:22px;cursor:pointer;padding:8px;transition:color .3s}
+
+/* Размытая подложка из текущего снимка */
+.lb-bg{
+  position:absolute;inset:0;z-index:0;
+  background-size:cover;background-position:center;
+  filter:blur(46px) brightness(.3) saturate(.75);
+  transform:scale(1.15);
+  transition:opacity .5s;
+}
+.lb > *:not(.lb-bg){position:relative;z-index:2}
+
+.lb-head{
+  display:flex;align-items:center;gap:16px;
+  padding:clamp(14px,2vw,24px) clamp(14px,3vw,40px);
+  flex-shrink:0;
+}
+.lb-back{
+  background:none;border:1px solid var(--line);color:var(--text);
+  font-family:var(--font);font-size:10px;font-weight:400;
+  letter-spacing:.22em;text-transform:uppercase;
+  padding:13px clamp(16px,2vw,28px);cursor:pointer;white-space:nowrap;
+  transition:border-color .3s,color .3s;
+}
+.lb-back:hover{border-color:var(--gold);color:var(--gold)}
+.lb-title{
+  flex:1;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  font-size:10px;letter-spacing:.28em;text-transform:uppercase;color:var(--muted);
+}
+.lb-close{
+  background:none;border:0;color:var(--muted);font-size:26px;line-height:1;
+  cursor:pointer;padding:4px 10px;transition:color .3s;flex-shrink:0;
+}
 .lb-close:hover{color:var(--gold)}
-.lb-foot{padding:18px var(--gut) 28px;display:flex;justify-content:space-between;gap:20px}
-.lb-count{font-size:10px;letter-spacing:.26em;color:var(--muted)}
+
+.lb-stage{
+  flex:1;min-height:0;
+  display:flex;align-items:center;
+  gap:clamp(2px,1vw,16px);
+  padding:0 clamp(6px,1.5vw,24px);
+}
+.lb-frame{
+  flex:1;min-width:0;height:100%;
+  display:grid;place-items:center;
+}
+/* Ключевое: снимок не может выйти за пределы отведённой области */
+.lb-frame img{
+  max-width:100%;max-height:100%;
+  width:auto;height:auto;
+  object-fit:contain;display:block;
+  box-shadow:0 24px 70px rgba(0,0,0,.55);
+}
+.lb-frame .ph{
+  width:min(100%,900px);aspect-ratio:3/2;
+  background:linear-gradient(140deg,#1a1a1a,#050505 70%);
+  display:grid;place-items:center;
+}
+.lb-frame .ph span{font-size:10px;letter-spacing:.3em;color:var(--dim)}
+
+.lb-nav{
+  background:none;border:0;flex-shrink:0;cursor:pointer;
+  color:rgba(245,245,245,.7);
+  font-size:clamp(20px,2.6vw,32px);line-height:1;
+  padding:clamp(8px,1.6vw,18px);
+  transition:color .3s,transform .3s;
+}
+.lb-nav:hover{color:var(--gold)}
+.lb-nav:active{transform:scale(.9)}
+
+.lb-count{
+  flex-shrink:0;text-align:center;
+  padding:clamp(10px,1.6vw,20px) 0 clamp(8px,1.2vw,14px);
+  font-size:11px;letter-spacing:.3em;color:var(--muted);
+}
+
+.lb-thumbs{
+  flex-shrink:0;display:flex;gap:9px;justify-content:center;
+  padding:0 clamp(12px,3vw,40px) clamp(18px,2.6vw,30px);
+  overflow-x:auto;overflow-y:hidden;
+  scrollbar-width:thin;scrollbar-color:var(--line) transparent;
+}
+.lb-thumbs::-webkit-scrollbar{height:4px}
+.lb-thumbs::-webkit-scrollbar-thumb{background:var(--line)}
+.lb-thumb{
+  width:clamp(62px,7vw,104px);aspect-ratio:4/3;flex-shrink:0;
+  border:1px solid transparent;padding:0;background:#111;cursor:pointer;
+  overflow:hidden;opacity:.45;transition:opacity .3s,border-color .3s;
+}
+.lb-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.lb-thumb:hover{opacity:.8}
+.lb-thumb.on{opacity:1;border-color:var(--text)}
+
+@media(max-width:640px){
+  .lb-back{font-size:9px;letter-spacing:.16em;padding:11px 14px}
+  .lb-title{display:none}
+  .lb-thumbs{gap:6px}
+}
 
 .rise{opacity:0;transform:translateY(26px);transition:opacity 1s ease,transform 1s cubic-bezier(.16,1,.3,1)}
 .rise.in{opacity:1;transform:none}
@@ -486,18 +575,19 @@ footer{padding:30px 0 clamp(40px,6vh,60px);border-top:1px solid var(--line)}
 
 <!-- ЛАЙТБОКС -->
 <div class="lb" id="lightbox" role="dialog" aria-modal="true" aria-label="Просмотр альбома">
+  <div class="lb-bg" id="lbBg" aria-hidden="true"></div>
   <div class="lb-head">
-    <h4 id="lbTitle"></h4>
+    <button class="lb-back" id="lbBack">К альбомам</button>
+    <span class="lb-title" id="lbTitle"></span>
     <button class="lb-close" id="lbClose" aria-label="Закрыть">&times;</button>
   </div>
   <div class="lb-stage" id="lbStage">
-    <button class="lb-nav lb-prev" id="lbPrev" aria-label="Предыдущий кадр"><i class="fa-solid fa-angle-left"></i></button>
-    <button class="lb-nav lb-next" id="lbNext" aria-label="Следующий кадр"><i class="fa-solid fa-angle-right"></i></button>
+    <button class="lb-nav" id="lbPrev" aria-label="Предыдущий кадр">&#10094;</button>
+    <div class="lb-frame" id="lbFrame"></div>
+    <button class="lb-nav" id="lbNext" aria-label="Следующий кадр">&#10095;</button>
   </div>
-  <div class="lb-foot">
-    <span class="lb-count" id="lbCaption"></span>
-    <span class="lb-count" id="lbCount"></span>
-  </div>
+  <div class="lb-count" id="lbCount"></div>
+  <div class="lb-thumbs" id="lbThumbs"></div>
 </div>
 
 <script>
@@ -700,39 +790,88 @@ function applyImages(im){
 
 /* ================= ЛАЙТБОКС ================= */
 const lb = document.getElementById('lightbox');
-const lbStage = document.getElementById('lbStage');
+const lbBg = document.getElementById('lbBg');
+const lbFrame = document.getElementById('lbFrame');
 const lbTitle = document.getElementById('lbTitle');
 const lbCount = document.getElementById('lbCount');
-const lbCaption = document.getElementById('lbCaption');
-let curNode = null, curIndex = 0, lastFocus = null;
+const lbThumbs = document.getElementById('lbThumbs');
+const lbBack = document.getElementById('lbBack');
+let curNode = null, curPath = [], curIndex = 0, lastFocus = null;
 
 function paint(){
-  const old = lbStage.querySelector('img, .ph');
-  if (old) old.remove();
-  lbStage.insertAdjacentHTML('afterbegin', mediaHTML(curNode.photos[curIndex], curNode.title));
+  const src = curNode.photos[curIndex];
+
+  lbFrame.innerHTML = mediaHTML(src, curNode.title + ' — кадр ' + (curIndex + 1));
+  lbBg.style.backgroundImage = src ? "url('" + encodeURI(src) + "')" : 'none';
+
   lbTitle.textContent = curNode.title;
-  lbCaption.textContent = curNode.title;
-  lbCount.textContent = String(curIndex + 1).padStart(2,'0') + ' / '
+  lbCount.textContent = String(curIndex + 1).padStart(2,'0') + '  /  '
                       + String(curNode.photos.length).padStart(2,'0');
+
+  const thumbs = lbThumbs.children;
+  for (let i = 0; i < thumbs.length; i++) {
+    thumbs[i].classList.toggle('on', i === curIndex);
+  }
+  const active = thumbs[curIndex];
+  if (active) active.scrollIntoView({ block:'nearest', inline:'center', behavior:'smooth' });
 }
-function openLb(node){
+
+function buildThumbs(){
+  lbThumbs.innerHTML = '';
+  if (curNode.photos.length < 2) return;
+  curNode.photos.forEach((src, i) => {
+    const b = document.createElement('button');
+    b.className = 'lb-thumb';
+    b.type = 'button';
+    b.dataset.i = i;
+    b.setAttribute('aria-label', 'Кадр ' + (i + 1));
+    b.innerHTML = mediaHTML(src, '');
+    lbThumbs.appendChild(b);
+  });
+}
+
+function backLabel(){
+  const parent = nodeAt(curPath.slice(0, -1));
+  return parent ? 'В ' + parent.title.toLowerCase() : 'К альбомам';
+}
+
+function openLb(node, path){
   if (!node || !node.photos || !node.photos.length) return;
   lastFocus = document.activeElement;
-  curNode = node; curIndex = 0; paint();
+  curNode = node;
+  curPath = path || [];
+  curIndex = 0;
+  buildThumbs();
+  paint();
+  lbBack.textContent = backLabel();
   lb.classList.add('open');
   document.body.classList.add('locked');
   document.getElementById('lbClose').focus();
 }
+
 function closeLb(){
   lb.classList.remove('open');
   document.body.classList.remove('locked');
+  lbBg.style.backgroundImage = 'none';
   if (lastFocus) lastFocus.focus();
 }
+
 function step(dir){
   const n = curNode.photos.length;
   curIndex = (curIndex + dir + n) % n;
   paint();
 }
+
+lbThumbs.addEventListener('click', e => {
+  const t = e.target.closest('.lb-thumb');
+  if (t) { curIndex = Number(t.dataset.i); paint(); }
+});
+
+lbBack.addEventListener('click', () => {
+  const up = curPath.slice(0, -1);
+  closeLb();
+  goTo(up);
+});
 
 listEl.addEventListener('click', e => {
   // Возврат на уровень выше
@@ -750,7 +889,7 @@ listEl.addEventListener('click', e => {
     const i = Number(root.dataset.go);
     const node = ALBUMS[i];
     if (node && node.children) goTo([i]);
-    else openLb(node);
+    else openLb(node, [i]);
     return;
   }
 
@@ -761,13 +900,16 @@ listEl.addEventListener('click', e => {
     const path = set.getAttribute('href').replace('#set-', '').split('-').map(Number);
     const node = nodeAt(path);
     if (node && node.children) goTo(path);
-    else openLb(node);
+    else openLb(node, path);
   }
 });
 document.getElementById('lbClose').addEventListener('click', closeLb);
 document.getElementById('lbPrev').addEventListener('click', () => step(-1));
 document.getElementById('lbNext').addEventListener('click', () => step(1));
-lb.addEventListener('click', e => { if (e.target === lb || e.target === lbStage) closeLb(); });
+const lbStage = document.getElementById('lbStage');
+lb.addEventListener('click', e => {
+  if (e.target === lb || e.target === lbStage || e.target === lbFrame) closeLb();
+});
 document.addEventListener('keydown', e => {
   if (!lb.classList.contains('open')) return;
   if (e.key === 'Escape') closeLb();
