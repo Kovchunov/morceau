@@ -110,13 +110,16 @@ a{color:inherit}
 .cover::before{
   content:"";position:absolute;inset:0;
   background:var(--panel) var(--cover-photo,none) center/cover no-repeat;
+  filter:brightness(.72) contrast(1.04);
   animation:slowzoom 26s ease-out forwards;
 }
 .cover::after{
   content:"";position:absolute;inset:0;
   background:
-    radial-gradient(70% 60% at 50% 45%, transparent 0%, rgba(0,0,0,.5) 100%),
-    linear-gradient(180deg, rgba(0,0,0,.55) 0%, transparent 30%, transparent 60%, #000 100%);
+    /* мягкое тёмное пятно под заголовком — работает и на светлых кадрах */
+    radial-gradient(64% 54% at 50% 45%, rgba(0,0,0,.66) 0%, rgba(0,0,0,.38) 55%, rgba(0,0,0,.06) 100%),
+    /* растворение в чёрный сверху и снизу */
+    linear-gradient(180deg, rgba(0,0,0,.6) 0%, rgba(0,0,0,.15) 26%, rgba(0,0,0,.2) 58%, #000 100%);
 }
 @keyframes slowzoom{from{transform:scale(1.06)}to{transform:scale(1)}}
 
