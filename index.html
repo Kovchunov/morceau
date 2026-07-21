@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Имя Фамилия — фотография и видео</title>
-<meta name="description" content="Портфолио фотографа и режиссёра. Портреты, репортаж, съёмка на плёнку и короткий метр.">
+<title>TULPA — художественная и портретная съёмка</title>
+<meta name="description" content="Портфолио фотографа Валерии: художественная и портретная съёмка, фольклор, сказка и образ. Томск.">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -576,7 +576,7 @@ footer{padding:30px 0 clamp(40px,6vh,60px);border-top:1px solid var(--line)}
 
 <footer>
   <div class="wrap foot label">
-    <span>© 2026 Имя Фамилия</span>
+    <span>© 2026 TULPA · Валерия</span>
     <span>Все права на изображения защищены</span>
   </div>
 </footer>
@@ -773,9 +773,11 @@ if (!DEMO) {
       // либо объект с альбомами и фоновыми фотографиями
       const albums = Array.isArray(data) ? data : data.albums;
       if (Array.isArray(albums) && albums.length) { ALBUMS = albums; renderAlbums(); }
-      if (!Array.isArray(data) && data.images) applyImages(data.images);
+      const imgs = (!Array.isArray(data) && data.images) ? data.images : {};
+      applyImages(imgs);
+      probeImages(imgs);
     })
-    .catch(() => { /* файл недоступен — остаётся запасной список */ });
+    .catch(() => { probeImages({}); });
 }
 
 /* Подставляет фоновые фотографии, найденные сборщиком в папке img */
@@ -794,6 +796,35 @@ function applyImages(im){
     if (shot) shot.innerHTML =
       '<img src="' + esc(encodeURI(im.portrait)) + '" alt="Портрет автора">';
   }
+}
+
+/* Подстраховка: если список фоновых фото не обновился (например, публикация
+   идёт не через Actions, а прямо из ветки), пробуем найти файлы сами. */
+function probeImages(known){
+  const EXT = ['jpg','jpeg','png','webp','avif'];
+  const SLOTS = {
+    cover:    ['img/cover',    'img/hero'],
+    about:    ['img/about-bg', 'img/about'],
+    portrait: ['img/portrait', 'img/me'],
+    contact:  ['img/contact']
+  };
+
+  const tryLoad = src => new Promise(res => {
+    const im = new Image();
+    im.onload  = () => res(src);
+    im.onerror = () => res(null);
+    im.src = src;
+  });
+
+  Object.keys(SLOTS).forEach(async slot => {
+    if (known && known[slot]) return;          // уже задано — не трогаем
+    for (const base of SLOTS[slot]) {
+      for (const ext of EXT) {
+        const found = await tryLoad(base + '.' + ext);
+        if (found) { applyImages({ [slot]: found }); return; }
+      }
+    }
+  });
 }
 
 /* ================= ЛАЙТБОКС ================= */

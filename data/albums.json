@@ -19,6 +19,7 @@
     }
   ],
   "images": {
-    "cover": "img/cover.jpg"
+    "cover": "img/cover.jpg",
+    "portrait": "img/portrait.jpg"
   }
 }
