@@ -1,0 +1,24 @@
+# Папка с загруженными фотографиями.
+# Здесь ничего не должно исполняться — только отдаваться картинки.
+#
+# ВАЖНО: здесь намеренно нет директив php_flag и php_value.
+# На большинстве хостингов PHP работает в режиме CGI/FastCGI,
+# и такие директивы приводят к ошибке 500 Internal Server Error.
+# Приёмы ниже работают в обеих конфигурациях.
+
+# Снимаем обработчик PHP — файлы перестают исполняться
+RemoveHandler .php .phtml .php3 .php4 .php5 .php7 .php8 .phar .pl .py .cgi
+RemoveType .php .phtml .phar
+
+# И на всякий случай закрываем к ним доступ вовсе
+<FilesMatch "\.(php|php3|php4|php5|php7|php8|phtml|phar|pl|py|cgi|sh|htaccess)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+Options -Indexes

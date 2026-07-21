@@ -507,7 +507,7 @@ const esc = s => String(s).replace(/[&<>"']/g, c =>
   ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 const mediaHTML = (src, alt) =>
-  src ? `<img src="${esc(src)}" alt="${esc(alt)}" loading="lazy">`
+  src ? `<img src="${esc(encodeURI(src))}" alt="${esc(alt)}" loading="lazy">`
       : `<span class="ph"><span>Фото</span></span>`;
 
 function renderAlbums(){
@@ -532,15 +532,38 @@ function renderAlbums(){
 
 renderAlbums();
 
-// Забираем актуальные альбомы: из JSON-файла или из панели управления
+// Забираем альбомы: из собранного JSON или из панели управления
 if (!DEMO) {
   const url = CONFIG.albumsFrom === 'php' ? CONFIG.albumsPhpUrl : CONFIG.albumsJsonUrl;
   fetch(url)
     .then(r => r.ok ? r.json() : null)
     .then(data => {
-      if (Array.isArray(data) && data.length) { ALBUMS = data; renderAlbums(); }
+      if (!data) return;
+      // Файл бывает двух видов: просто список альбомов
+      // либо объект с альбомами и фоновыми фотографиями
+      const albums = Array.isArray(data) ? data : data.albums;
+      if (Array.isArray(albums) && albums.length) { ALBUMS = albums; renderAlbums(); }
+      if (!Array.isArray(data) && data.images) applyImages(data.images);
     })
     .catch(() => { /* файл недоступен — остаётся запасной список */ });
+}
+
+/* Подставляет фоновые фотографии, найденные сборщиком в папке img */
+function applyImages(im){
+  const put = (sel, prop, file) => {
+    if (!file) return;
+    const el = document.querySelector(sel);
+    if (el) el.style.setProperty(prop, "url('" + encodeURI(file) + "')");
+  };
+  put('.cover', '--cover-photo', im.cover);
+  put('.about-sec', '--about-photo', im.about);
+  put('.contact-photo', '--contact-photo', im.contact);
+
+  if (im.portrait) {
+    const shot = document.querySelector('.portrait .shot');
+    if (shot) shot.innerHTML =
+      '<img src="' + esc(encodeURI(im.portrait)) + '" alt="Портрет автора">';
+  }
 }
 
 /* ================= ЛАЙТБОКС ================= */
